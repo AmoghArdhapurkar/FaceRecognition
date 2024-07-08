@@ -4,7 +4,8 @@ import numpy as np
 import os, sys
 import math
 
-def face_confidence(face_distance, face_match_threshold = 0.6):
+
+def face_confidence(face_distance, face_match_threshold=0.6):
     range = 1.0 - face_match_threshold
     linear_val = (1.0 - face_distance) / (range * 2.0)
 
@@ -29,8 +30,10 @@ class FaceRecognition:
 
     def encode_faces(self):
         for image in os.listdir("faces"):
-            face_image = face_recognition.load_image_file(f"faces/{image}")
-            face_encoding = face_recognition.face_encodings(face_image)[0]
+            face_image = face_recognition.load_image_file(
+                f"faces/{image}")  #Loads the image for face_recognition to use
+            face_encoding = face_recognition.face_encodings(face_image)[
+                0]  #Enocodes the image using face_recognition library
 
             self.known_face_encodings.append(face_encoding)
             self.known_face_names.append(image)
@@ -49,16 +52,22 @@ class FaceRecognition:
             if self.process_current_frame:
                 small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
                 #rgb_small_frame = small_frame[:, :, ::-1]
-                rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
+                rgb_small_frame = cv2.cvtColor(small_frame,
+                                               cv2.COLOR_BGR2RGB)  # Changes the frame from BGR format to RGB format
 
-                # Find all faces in current frame
-                self.face_locations = face_recognition.face_locations(rgb_small_frame)
-                self.face_encodings = face_recognition.face_encodings(rgb_small_frame, self.face_locations)
+                self.face_locations = face_recognition.face_locations(rgb_small_frame)  # Find all faces in current frame
+                self.face_encodings = face_recognition.face_encodings(rgb_small_frame,self.face_locations)  # Encode all faces in frame
 
                 self.face_names = []
                 for face_encoding in self.face_encodings:
+                    '''
+                    Compares each face to the images to find which one provides the best match
+                    Tolerance parameter dictates how "far" two images must be to be considered a match
+                    A lower tolerance parameter is more strict while a higher number is more relaxed
+                    '''
+
                     matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding, tolerance=0.55)
-                    name = "Unknown"
+                    name = "Unknown" # Set a default name in case there is no match
                     confidence = "Unknown"
 
                     face_distances = face_recognition.face_distance(self.known_face_encodings, face_encoding)
@@ -69,11 +78,13 @@ class FaceRecognition:
                         name = name.split(".")[0]
                         confidence = face_confidence(face_distances[best_match_index])
 
+                    '''
                     if (name == "Unknown"):
                         self.face_names.append(f'{name}')
                     else:
                         self.face_names.append(f'{name} ({confidence})')
-
+                    '''
+                    self.face_names.append(f'{name}')
 
             self.process_current_frame = not self.process_current_frame
 
@@ -94,17 +105,13 @@ class FaceRecognition:
                     cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), -1)
                     cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8, (0, 0, 0), 2)
 
-
-
             cv2.imshow('FaceRecognition', frame)
 
             if cv2.waitKey(1) == ord('q'):
                 break
 
-
         video_capture.release()
         cv2.destroyAllWindows()
-
 
 
 if __name__ == "__main__":
