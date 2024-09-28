@@ -21,7 +21,7 @@ class FaceRecognition:
     face_locations = []
     face_encodings = []
     face_names = []
-    known_face_encodings = []
+    known_face_encodings = {}
     known_face_names = []
     process_current_frame = True;
 
@@ -29,14 +29,19 @@ class FaceRecognition:
         self.encode_faces()
 
     def encode_faces(self):
-        for image in os.listdir("faces"):
-            face_image = face_recognition.load_image_file(
-                f"faces/{image}")  #Loads the image for face_recognition to use
-            face_encoding = face_recognition.face_encodings(face_image)[
-                0]  #Enocodes the image using face_recognition library
+        for dir in os.listdir("faces"):
+            if dir == ".DS_Store":
+                continue
 
-            self.known_face_encodings.append(face_encoding)
-            self.known_face_names.append(image)
+            self.known_face_names.append(dir)
+
+            self.known_face_encodings[dir] = []
+
+            for image in os.listdir("faces/" + dir):
+                face_image = face_recognition.load_image_file("faces/" + dir + "/" + image)  #Loads the image for face_recognition to use
+                face_encoding = face_recognition.face_encodings(face_image)[0]  #Enocodes the image using face_recognition library
+
+                self.known_face_encodings[dir].append(face_encoding)
 
         print(self.known_face_names)
 
@@ -66,7 +71,7 @@ class FaceRecognition:
                     A lower tolerance parameter is more strict while a higher number is more relaxed
                     '''
 
-                    matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding, tolerance=0.55)
+                    matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding, tolerance=0.57)
                     name = "Unknown" # Set a default name in case there is no match
                     confidence = "Unknown"
 
@@ -116,4 +121,4 @@ class FaceRecognition:
 
 if __name__ == "__main__":
     fr = FaceRecognition()
-    fr.run_recognition()
+    # fr.run_recognition()
